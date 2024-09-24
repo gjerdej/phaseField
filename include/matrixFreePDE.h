@@ -132,7 +132,8 @@ public:
   setInitialCondition(const dealii::Point<dim> &p,
                       const unsigned int        index,
                       double                   &scalar_IC,
-                      dealii::Vector<double>   &vector_IC) = 0;
+                      dealii::Vector<double>   &vector_IC,
+                      const std::vector<double> &data = std::vector<double>()) = 0;
 
   // Non-uniform boundary conditions function
   virtual void
@@ -369,6 +370,12 @@ protected:
   setRigidBodyModeConstraints(const std::vector<int>,
                               AffineConstraints<double> *,
                               const DoFHandler<dim> *) const;
+
+  // Function to read from a binary .dat file
+  std::vector<double>
+  read_binary_data(const std::string         &filename,
+                                              const std::vector<unsigned int> &subdivisions);
+
 
   // methods to apply initial conditions
   /*Virtual method to apply initial conditions.  This is usually expected to be
