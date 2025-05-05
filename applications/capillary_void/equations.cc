@@ -66,19 +66,17 @@ customPDE<dim, degree>::explicitEquationRHS(
   scalargradType  mux  = variable_list.get_scalar_gradient(1);
   scalarvalueType psi  = variable_list.get_scalar_value(2);
   scalargradType  psix = variable_list.get_scalar_gradient(2);
-  scalarvalueType irxn = 1.0;
+  scalarvalueType Bnc = 0.0;
   scalarvalueType psixdotmux = 0.0;
   scalarvalueType psixmag = 0.0;
 
   // --- Setting the expressions for the terms in the governing equations ---
   for (int i = 0.0; i < dim; ++i) {
     psixdotmux += psix[i] * mux[i];
-  }
-  for (int i = 0.0; i < dim; ++i) {
     psixmag += psix[i] * psix[i];
   }
 
-  scalarvalueType eq_c  = c + constV(McV * userInputs.dtValue) * (psixdotmux - psixmag * irxn) / (psi + 1.0e-6);
+  scalarvalueType eq_c  = c + constV(McV * userInputs.dtValue) * (psixdotmux + psixmag * Bnc) / psi;
   scalargradType  eqx_c = constV(-McV * userInputs.dtValue) * mux;
 
   // --- Submitting the terms for the governing equations ---
@@ -115,6 +113,8 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   scalargradType  psix = variable_list.get_scalar_gradient(2);
 
   scalarvalueType psixdotcx = 0.0;
+  scalarvalueType Bnmu = 0.0;
+  scalarvalueType psixmag = 0.0;
 
   // --- Setting the expressions for the terms in the governing equations ---
 
@@ -124,9 +124,10 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   // The terms for the governing equations
   for (int i = 0.0; i < dim; ++i) {
     psixdotcx += psix[i] * cx[i];
+    psixmag += psix[i] * psix[i];
   }
 
-  scalarvalueType eq_mu  = fcV + constV(KcV) * psixdotcx / psi;
+  scalarvalueType eq_mu  = fcV - constV(KcV) * (psixdotcx + psixmag * Bnmu) / psi;
   scalargradType  eqx_mu = constV(KcV) * cx;
 
   // --- Submitting the terms for the governing equations ---

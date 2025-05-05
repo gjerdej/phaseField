@@ -23,19 +23,21 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
     
         // int_width = 3*(userInputs.domain_size[0] / ((double) userInputs.subdivisions[0]) /
         //   std::pow(2.0, userInputs.refine_factor));
-    scalar_IC = 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))) * 0.5*(1.0+std::tanh((std::pow(2.0, p[0] - userInputs.domain_size[0]/2.0)
-     + std::pow(2.0, p[1] - userInputs.domain_size[1]/2.0) - std::pow(2.0, userInputs.domain_size[1]/6.0))/(int_width/2.0)));
+    scalar_IC = 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))); //* 0.5*(1.0+std::tanh((std::pow(2.0, p[0] - userInputs.domain_size[0]/2.0)
+     //+ std::pow(2.0, p[1] - userInputs.domain_size[1]/2.0) - std::pow(2.0, userInputs.domain_size[1]/6.0))/(int_width/2.0)));
     
     // double r = std::sqrt((p[0]-userInputs.domain_size[0]/2.0)*(p[0]-userInputs.domain_size[0]/2.0)+(p[1]-userInputs.domain_size[1]/2.0)*(p[1]-userInputs.domain_size[1]/2.0));
     // scalar_IC = 0.5*(1.0+std::tanh((r-std::sqrt(userInputs.domain_size[0]/4.0))/(0.5*int_width)));
   }
 
   if (index == 1){
-    scalar_IC = 0.0;
+    // 4/int_width**2*((np.tanh(2/int_width*(y-ysize/2)))**3 - np.tanh(2/int_width*(y-ysize/2)))
+    // scalarvalueType c = 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2)));
+    scalar_IC = 0.0; //constV(0.25) * (constV(2.0) * std::pow(2.0, 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2)))) - constV(4.0) * std::pow(3.0, 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))))) - constV(1.0e-3) * 4/std::pow(2.0, int_width) * (std::pow(3.0, std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))) - std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2)));
   }
 
   if (index == 2){
-    scalar_IC = 0.5*(1.0+std::tanh((p[1]-userInputs.domain_size[1]/2.0)/(int_width/2))) + 1.0e-6;
+    scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2))) + 1.0e-6;
   }
 
   // ---------------------------------------------------------------------
