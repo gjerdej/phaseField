@@ -29,7 +29,7 @@ customAttributeLoader::loadVariableAttributes()
   // Variable 1
   set_variable_name(1, "mu");
   set_variable_type(1, SCALAR);
-  set_variable_equation_type(1, EXPLICIT_TIME_DEPENDENT);
+  set_variable_equation_type(1, AUXILIARY);
 
   set_dependencies_value_term_RHS(1, "c, grad(c), psi, grad(psi)");
   set_dependencies_gradient_term_RHS(1, "grad(c), psi, grad(psi)");
@@ -37,7 +37,7 @@ customAttributeLoader::loadVariableAttributes()
   // Variable 2
   set_variable_name(2, "psi");
   set_variable_type(2, SCALAR);
-  set_variable_equation_type(2, EXPLICIT_TIME_DEPENDENT);
+  set_variable_equation_type(2, AUXILIARY);
 
   set_dependencies_value_term_RHS(2, "psi");
   set_dependencies_gradient_term_RHS(2, "");
@@ -65,36 +65,24 @@ customPDE<dim, degree>::explicitEquationRHS(
 {
   // --- Getting the values and derivatives of the model variables ---
   scalarvalueType c    = variable_list.get_scalar_value(0);
-  scalargradType  cx = variable_list.get_scalar_gradient(0);
   scalargradType  mux  = variable_list.get_scalar_gradient(1);
   scalarvalueType psi  = variable_list.get_scalar_value(2);
   scalargradType  psix = variable_list.get_scalar_gradient(2);
   scalarvalueType Bnc = -1.0;
-  scalarvalueType Bnmu = 0.0;
   scalarvalueType psixdotmux = 0.0;
-  scalarvalueType psixdotcx = 0.0;
   scalarvalueType psixmag = 0.0;
 
   // --- Setting the expressions for the terms in the governing equations ---
   for (int i = 0.0; i < dim; ++i) {
     psixdotmux += psix[i] * mux[i];
-    psixdotcx += psix[i] * cx[i];
     psixmag += psix[i] * psix[i];
   }
-
-  scalarvalueType fcV = constV(0.5) * (c * (1.0 - c) * (1.0 - c) - c * c * (1.0 - c));
 
   scalarvalueType eq_c  = c + constV(McV * userInputs.dtValue) * (psixdotmux + psixmag * Bnc) / psi;
   scalargradType  eqx_c = constV(-McV * userInputs.dtValue) * mux;
 
-  scalarvalueType eq_mu  = fcV - constV(KcV) * (psixdotcx + psixmag * Bnmu) / psi;
-  scalargradType  eqx_mu = constV(KcV) * cx;
-
   // --- Submitting the terms for the governing equations ---
 
-  variable_list.set_scalar_value_term_RHS(1, eq_mu);
-  variable_list.set_scalar_gradient_term_RHS(1, eqx_mu);
-  variable_list.set_scalar_value_term_RHS(2, psi);
   variable_list.set_scalar_value_term_RHS(0, eq_c);
   variable_list.set_scalar_gradient_term_RHS(0, eqx_c);
 }
@@ -119,38 +107,38 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   [[maybe_unused]] const Point<dim, VectorizedArray<double>>                q_point_loc,
   [[maybe_unused]] const VectorizedArray<double> element_volume) const
 {
-  // // --- Getting the values and derivatives of the model variables ---
+  // --- Getting the values and derivatives of the model variables ---
 
-  // scalarvalueType c  = variable_list.get_scalar_value(0);
-  // scalargradType  cx = variable_list.get_scalar_gradient(0);
+  scalarvalueType c  = variable_list.get_scalar_value(0);
+  scalargradType  cx = variable_list.get_scalar_gradient(0);
 
-  // scalarvalueType psi  = variable_list.get_scalar_value(2);
-  // scalargradType  psix = variable_list.get_scalar_gradient(2);
+  scalarvalueType psi  = variable_list.get_scalar_value(2);
+  scalargradType  psix = variable_list.get_scalar_gradient(2);
 
-  // scalarvalueType psixdotcx = 0.0;
-  // scalarvalueType Bnmu = 0.0;
-  // scalarvalueType psixmag = 0.0;
+  scalarvalueType psixdotcx = 0.0;
+  scalarvalueType Bnmu = 0.0;
+  scalarvalueType psixmag = 0.0;
 
-  // // --- Setting the expressions for the terms in the governing equations ---
+  // --- Setting the expressions for the terms in the governing equations ---
 
-  // // The derivative of the local free energy
-  // scalarvalueType fcV = constV(0.25) * (constV(2.0) * c * c - constV(4.0) * c * c * c);
+  // The derivative of the local free energy
+  scalarvalueType fcV = 30.0 * constV(0.5) * (c * (1.0 - c) * (1.0 - c) - c * c * (1.0 - c));
 
-  // // The terms for the governing equations
-  // for (int i = 0.0; i < dim; ++i) {
-  //   psixdotcx += psix[i] * cx[i];
-  //   psixmag += psix[i] * psix[i];
-  // }
+  // The terms for the governing equations
+  for (int i = 0.0; i < dim; ++i) {
+    psixdotcx += psix[i] * cx[i];
+    psixmag += psix[i] * psix[i];
+  }
 
-  // scalarvalueType eq_mu  = fcV - constV(KcV) * (psixdotcx + psixmag * Bnmu) / psi;
-  // scalargradType  eqx_mu = constV(KcV) * cx;
+  scalarvalueType eq_mu  = fcV - constV(KcV) * (psixdotcx + psixmag * Bnmu) / psi;
+  scalargradType  eqx_mu = constV(KcV) * cx;
 
-  // // --- Submitting the terms for the governing equations ---
+  // --- Submitting the terms for the governing equations ---
 
-  // variable_list.set_scalar_value_term_RHS(1, eq_mu);
-  // variable_list.set_scalar_gradient_term_RHS(1, eqx_mu);
+  variable_list.set_scalar_value_term_RHS(1, eq_mu);
+  variable_list.set_scalar_gradient_term_RHS(1, eqx_mu);
 
-  // variable_list.set_scalar_value_term_RHS(2, psi);
+  variable_list.set_scalar_value_term_RHS(2, psi);
 }
 
 // =============================================================================================
