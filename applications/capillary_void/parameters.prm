@@ -22,7 +22,7 @@ set Subdivisions X = 1
 set Subdivisions Y = 1
 set Subdivisions Z = 1
 
-set Refine factor = 5
+set Refine factor = 6
 
 # Set the polynomial degree of the element (allowed values: 1, 2, or 3)
 set Element degree = 1
@@ -74,7 +74,7 @@ set Boundary condition for variable psi = NATURAL
 set Model constant McV = 1.0, DOUBLE
 
 # The gradient energy coefficient, KcV in equations.h
-set Model constant KcV = 1.0e-3, DOUBLE
+set Model constant KcV = 1.0, DOUBLE
 
 # =================================================================================
 # Set the output parameters
