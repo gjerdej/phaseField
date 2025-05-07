@@ -41,6 +41,9 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
     scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2))) + 1.0e-6;
   }
 
+  if (index == 3){
+    scalar_IC = 0.0;
+  }
   // ---------------------------------------------------------------------
 }
 

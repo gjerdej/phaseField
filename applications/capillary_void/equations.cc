@@ -23,8 +23,6 @@ customAttributeLoader::loadVariableAttributes()
 
   set_dependencies_value_term_RHS(0, "c, psi, grad(psi)");
   set_dependencies_gradient_term_RHS(0, "grad(mu), psi, grad(psi)");
-  //set_dependencies_value_term_RHS(0, "c");
-  //set_dependencies_gradient_term_RHS(0, "");
 
   // Variable 1
   set_variable_name(1, "mu");
@@ -41,6 +39,16 @@ customAttributeLoader::loadVariableAttributes()
 
   set_dependencies_value_term_RHS(2, "psi");
   set_dependencies_gradient_term_RHS(2, "");
+
+  // Variable 3
+  set_variable_name(3, "phili");
+  set_variable_type(3, SCALAR);
+  set_variable_equation_type(3, TIME_INDEPENDENT);
+
+  set_dependencies_value_term_RHS(3, "grad(psi)");
+  set_dependencies_gradient_term_RHS(3, "psi, grad(phili)");
+  set_dependencies_value_term_LHS(3, "");
+  set_dependencies_gradient_term_LHS(3, "psi, grad(change(phili))");
 }
 
 // =============================================================================================
@@ -115,8 +123,11 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   scalarvalueType psi  = variable_list.get_scalar_value(2);
   scalargradType  psix = variable_list.get_scalar_gradient(2);
 
+  scalargradType  philix = variable_list.get_scalar_gradient(3);
+
   scalarvalueType psixdotcx = 0.0;
   scalarvalueType Bnmu = 0.0;
+  scalarvalueType Bnphili = 0.0;
   scalarvalueType psixmag = 0.0;
 
   // --- Setting the expressions for the terms in the governing equations ---
@@ -133,12 +144,18 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   scalarvalueType eq_mu  = fcV - constV(KcV) * (psixdotcx + psixmag * Bnmu) / psi;
   scalargradType  eqx_mu = constV(KcV) * cx;
 
+  scalarvalueType eq_phili  = psixmag * Bnphili;
+  scalargradType  eqx_phili = -psi * philix;
+
   // --- Submitting the terms for the governing equations ---
 
   variable_list.set_scalar_value_term_RHS(1, eq_mu);
   variable_list.set_scalar_gradient_term_RHS(1, eqx_mu);
 
   variable_list.set_scalar_value_term_RHS(2, psi);
+
+  variable_list.set_scalar_value_term_RHS(3, eq_phili);
+  variable_list.set_scalar_gradient_term_RHS(3, eqx_phili);
 }
 
 // =============================================================================================
@@ -162,4 +179,11 @@ customPDE<dim, degree>::equationLHS(
   [[maybe_unused]] variableContainer<dim, degree, VectorizedArray<double>> &variable_list,
   [[maybe_unused]] const Point<dim, VectorizedArray<double>>                q_point_loc,
   [[maybe_unused]] const VectorizedArray<double> element_volume) const
-{}
+{
+  scalarvalueType psi  = variable_list.get_scalar_value(2);
+  scalargradType Dphilix = variable_list.get_change_in_scalar_gradient(3);
+
+  scalargradType eqx_phili = psi * Dphilix;
+
+  variable_list.set_scalar_gradient_term_LHS(3,eqx_phili);
+}
