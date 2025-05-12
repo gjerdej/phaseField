@@ -44,6 +44,10 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
   if (index == 3){
     scalar_IC = 0.0;
   }
+
+  if (index == 4){
+    scalar_IC = 0.0;
+  }
   // ---------------------------------------------------------------------
 }
 
