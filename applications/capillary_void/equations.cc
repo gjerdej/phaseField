@@ -21,7 +21,7 @@ customAttributeLoader::loadVariableAttributes()
   set_variable_type(0, SCALAR);
   set_variable_equation_type(0, EXPLICIT_TIME_DEPENDENT);
 
-  set_dependencies_value_term_RHS(0, "c, psi, grad(psi)");
+  set_dependencies_value_term_RHS(0, "c, psi, grad(psi), phie");
   set_dependencies_gradient_term_RHS(0, "grad(mu), psi, grad(psi)");
 
   // Variable 1
@@ -41,24 +41,24 @@ customAttributeLoader::loadVariableAttributes()
   set_dependencies_gradient_term_RHS(2, "");
 
   // Variable 3
-  set_variable_name(3, "phili");
+  set_variable_name(3, "phie");
   set_variable_type(3, SCALAR);
   set_variable_equation_type(3, TIME_INDEPENDENT);
 
-  set_dependencies_value_term_RHS(3, "grad(psi)");
-  set_dependencies_gradient_term_RHS(3, "psi, grad(phili)");
+  set_dependencies_value_term_RHS(3, "grad(psi), phie, c");
+  set_dependencies_gradient_term_RHS(3, "psi, grad(phie)");
   set_dependencies_value_term_LHS(3, "");
-  set_dependencies_gradient_term_LHS(3, "psi, grad(change(phili))");
+  set_dependencies_gradient_term_LHS(3, "psi, grad(change(phie))");
 
-  // Variable 4
-  set_variable_name(4, "phie");
-  set_variable_type(4, SCALAR);
-  set_variable_equation_type(4, TIME_INDEPENDENT);
+  // // Variable 4
+  // set_variable_name(4, "phie");
+  // set_variable_type(4, SCALAR);
+  // set_variable_equation_type(4, TIME_INDEPENDENT);
 
-  set_dependencies_value_term_RHS(4, "psi, grad(psi), c");
-  set_dependencies_gradient_term_RHS(4, "psi, grad(phie)");
-  set_dependencies_value_term_LHS(4, "");
-  set_dependencies_gradient_term_LHS(4, "psi, grad(change(phie))");
+  // set_dependencies_value_term_RHS(4, "psi, grad(psi)");
+  // set_dependencies_gradient_term_RHS(4, "psi, grad(phie)");
+  // set_dependencies_value_term_LHS(4, "");
+  // set_dependencies_gradient_term_LHS(4, "psi, grad(change(phie))");
 }
 
 // =============================================================================================
@@ -82,25 +82,24 @@ customPDE<dim, degree>::explicitEquationRHS(
   [[maybe_unused]] const VectorizedArray<double> element_volume) const
 {
   // --- Getting the values and derivatives of the model variables ---
-  scalarvalueType c    = variable_list.get_scalar_value(0);
+  scalarvalueType c = variable_list.get_scalar_value(0);
 
-  scalargradType  mux  = variable_list.get_scalar_gradient(1);
+  scalargradType  mux = variable_list.get_scalar_gradient(1);
 
-  scalarvalueType psi  = variable_list.get_scalar_value(2);
+  scalarvalueType psi = variable_list.get_scalar_value(2);
   scalargradType  psix = variable_list.get_scalar_gradient(2);
 
-  scalarvalueType Bnc = -1.0;
+  scalarvalueType phie = variable_list.get_scalar_value(3);
 
-  scalarvalueType psixdotmux = 0.0;
-  scalarvalueType psixmag = 0.0;
+  scalarvalueType j0 = 24.0;
+  scalarvalueType RT = 2.48e3;
+  scalarvalueType F = 9.65e4;
+  scalarvalueType hc = c * c * (3.0 - 2.0 * c);
+  scalarvalueType Bnc = 2.0 * j0 / (2.0 * RT) * phie * hc;
 
   // --- Setting the expressions for the terms in the governing equations ---
-  for (int i = 0.0; i < dim; ++i) {
-    psixdotmux += psix[i] * mux[i];
-    psixmag += psix[i] * psix[i];
-  }
 
-  scalarvalueType eq_c  = c + constV(McV * userInputs.dtValue) * (psixdotmux + psixmag * Bnc) / psi;
+  scalarvalueType eq_c  = c + constV(userInputs.dtValue) * (McV * psix * mux + std::sqrt(psix * psix) * Bnc) / psi;
   scalargradType  eqx_c = constV(-McV * userInputs.dtValue) * mux;
 
   // --- Submitting the terms for the governing equations ---
@@ -137,21 +136,18 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   scalarvalueType psi  = variable_list.get_scalar_value(2);
   scalargradType  psix = variable_list.get_scalar_gradient(2);
 
-  scalargradType  philix = variable_list.get_scalar_gradient(3);
+  // scalargradType  philix = variable_list.get_scalar_gradient(3);
 
-  scalargradType  phiex = variable_list.get_scalar_gradient(4);
+  scalarvalueType phie  = variable_list.get_scalar_value(3);
+  scalargradType  phiex = variable_list.get_scalar_gradient(3);
 
-  scalarvalueType psixdotcx = 0.0;
-  scalarvalueType psixdotphilix = 0.0;
-  scalarvalueType psixdotphiex = 0.0;
-  scalarvalueType psixmag = 0.0;
-  
-  
   scalarvalueType Bnmu = 0.0;
-  //scalarvalueType Bnphili = 0.0;
-  //scalarvalueType Bnphie = 0.0;
   scalarvalueType eps = 30.0;
   scalarvalueType F = 9.65e4;
+  scalarvalueType sigma = 2.0e-1;
+  scalarvalueType j0 = 24.0;
+  scalarvalueType RT = 2.48e3;
+  scalarvalueType hc  = c * c * (3.0 - 2.0 * c);
 
   // --- Setting the expressions for the terms in the governing equations ---
 
@@ -159,21 +155,14 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   scalarvalueType fcV = 30.0 * constV(0.5) * (c * (1.0 - c) * (1.0 - c) - c * c * (1.0 - c));
 
   // The terms for the governing equations
-  for (int i = 0.0; i < dim; ++i) {
-    psixdotcx += psix[i] * cx[i];
-    psixdotphilix += psix[i] * philix[i];
-    psixdotphiex += psix[i] * phiex[i];
-    psixmag += psix[i] * psix[i];
-  }
-
-  scalarvalueType eq_mu  = fcV - constV(KcV) * (psixdotcx + psixmag * Bnmu) / psi;
+  scalarvalueType eq_mu  = fcV - constV(KcV) * (psix * cx + Bnmu) / psi;
   scalargradType  eqx_mu = constV(KcV) * cx;
 
-  scalarvalueType eq_phili  = -psixdotphiex;
-  scalargradType  eqx_phili = -psi * philix;
+  // scalarvalueType eq_phili  = -psix * phiex;
+  // scalargradType  eqx_phili = -psi * philix;
 
-  scalarvalueType eq_phie  = psixdotphilix;
-  scalargradType  eqx_phie = (1.0 - psi) * phiex;
+  scalarvalueType eq_phie  = 1.0 / sigma * std::sqrt(psix * psix) * j0 * F / (2.0 * RT) * phie * hc;
+  scalargradType  eqx_phie = -(1.0 - psi) * phiex;
 
   // --- Submitting the terms for the governing equations ---
 
@@ -182,11 +171,11 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
 
   variable_list.set_scalar_value_term_RHS(2, psi);
 
-  variable_list.set_scalar_value_term_RHS(3, eq_phili);
-  variable_list.set_scalar_gradient_term_RHS(3, eqx_phili);
+  // variable_list.set_scalar_value_term_RHS(3, eq_phili);
+  // variable_list.set_scalar_gradient_term_RHS(3, eqx_phili);
 
-  variable_list.set_scalar_value_term_RHS(4, eq_phie);
-  variable_list.set_scalar_gradient_term_RHS(4, eqx_phie);
+  variable_list.set_scalar_value_term_RHS(3, eq_phie);
+  variable_list.set_scalar_gradient_term_RHS(3, eqx_phie);
 }
 
 // =============================================================================================
@@ -212,21 +201,21 @@ customPDE<dim, degree>::equationLHS(
   [[maybe_unused]] const VectorizedArray<double> element_volume) const
 {
 
+  // if (this -> currentFieldIndex == 3){
+  //   scalarvalueType psi  = variable_list.get_scalar_value(2);
+  //   scalargradType Dphilix = variable_list.get_change_in_scalar_gradient(3);
+
+  //   scalargradType eqx_phili = psi * Dphilix;
+
+  //   variable_list.set_scalar_gradient_term_LHS(3,eqx_phili);
+  // }
+  
   if (this -> currentFieldIndex == 3){
     scalarvalueType psi  = variable_list.get_scalar_value(2);
-    scalargradType Dphilix = variable_list.get_change_in_scalar_gradient(3);
+    scalargradType Dphiex = variable_list.get_change_in_scalar_gradient(3);
 
-    scalargradType eqx_phili = psi * Dphilix;
-
-    variable_list.set_scalar_gradient_term_LHS(3,eqx_phili);
-  }
+    scalargradType eqx_phie = (1.0 - psi) * Dphiex;
   
-  if (this -> currentFieldIndex == 4){
-    scalarvalueType psi  = variable_list.get_scalar_value(2);
-    scalargradType Dphiex = variable_list.get_change_in_scalar_gradient(4);
-
-    scalargradType eqx_phie = -(1.0 - psi) * Dphiex;
-  
-    variable_list.set_scalar_gradient_term_LHS(4,eqx_phie); 
+    variable_list.set_scalar_gradient_term_LHS(3,eqx_phie); 
   }
 }
