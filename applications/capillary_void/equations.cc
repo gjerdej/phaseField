@@ -45,9 +45,9 @@ customAttributeLoader::loadVariableAttributes()
   set_variable_type(3, SCALAR);
   set_variable_equation_type(3, TIME_INDEPENDENT);
 
-  set_dependencies_value_term_RHS(3, "grad(psi), phie, c");
+  set_dependencies_value_term_RHS(3, "grad(psi), phie");
   set_dependencies_gradient_term_RHS(3, "psi, grad(phie)");
-  set_dependencies_value_term_LHS(3, "");
+  set_dependencies_value_term_LHS(3, "grad(psi), change(phie)");
   set_dependencies_gradient_term_LHS(3, "psi, grad(change(phie))");
 
   // // Variable 4
@@ -94,12 +94,12 @@ customPDE<dim, degree>::explicitEquationRHS(
   scalarvalueType j0 = 24.0;
   scalarvalueType RT = 2.48e3;
   scalarvalueType F = 9.65e4;
-  scalarvalueType hc = c * c * (3.0 - 2.0 * c);
-  scalarvalueType Bnc = 2.0 * j0 / (2.0 * RT) * phie * hc;
+  // scalarvalueType hc = c * c * (3.0 - 2.0 * c);
+  scalarvalueType Bnc = j0 / RT * phie;
 
   // --- Setting the expressions for the terms in the governing equations ---
 
-  scalarvalueType eq_c  = c + constV(userInputs.dtValue) * (McV * psix * mux + std::sqrt(psix * psix) * Bnc) / psi;
+  scalarvalueType eq_c  = c + constV(userInputs.dtValue) * (McV * psix * mux + (-std::sqrt(psix * psix) * Bnc)) / psi;
   scalargradType  eqx_c = constV(-McV * userInputs.dtValue) * mux;
 
   // --- Submitting the terms for the governing equations ---
@@ -147,7 +147,7 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   scalarvalueType sigma = 2.0e-1;
   scalarvalueType j0 = 24.0;
   scalarvalueType RT = 2.48e3;
-  scalarvalueType hc  = c * c * (3.0 - 2.0 * c);
+  // scalarvalueType hc  = c * c * (3.0 - 2.0 * c);
 
   // --- Setting the expressions for the terms in the governing equations ---
 
@@ -161,8 +161,8 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   // scalarvalueType eq_phili  = -psix * phiex;
   // scalargradType  eqx_phili = -psi * philix;
 
-  scalarvalueType eq_phie  = 1.0 / sigma * std::sqrt(psix * psix) * j0 * F / (2.0 * RT) * phie * hc;
-  scalargradType  eqx_phie = -(1.0 - psi) * phiex;
+  scalarvalueType eq_phie  = -std::sqrt(psix * psix) * j0 * F / RT * phie;
+  scalargradType  eqx_phie = -(1.0 - psi) * phiex * sigma;
 
   // --- Submitting the terms for the governing equations ---
 
@@ -212,9 +212,16 @@ customPDE<dim, degree>::equationLHS(
   
   if (this -> currentFieldIndex == 3){
     scalarvalueType psi  = variable_list.get_scalar_value(2);
+    scalargradType  psix = variable_list.get_scalar_gradient(2);
+    scalarvalueType Dphie = variable_list.get_change_in_scalar_value(3);
     scalargradType Dphiex = variable_list.get_change_in_scalar_gradient(3);
+    scalarvalueType F = 9.65e4;
+    scalarvalueType sigma = 2.0e-1;
+    scalarvalueType j0 = 24.0;
+    scalarvalueType RT = 2.48e3;
 
-    scalargradType eqx_phie = (1.0 - psi) * Dphiex;
+    scalarvalueType eq_phie  = -std::sqrt(psix * psix) * j0 * F / RT * Dphie;
+    scalargradType eqx_phie = (1.0 - psi) * Dphiex * sigma;
   
     variable_list.set_scalar_gradient_term_LHS(3,eqx_phie); 
   }
