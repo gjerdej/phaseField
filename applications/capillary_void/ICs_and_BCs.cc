@@ -24,8 +24,12 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
         // int_width = 3*(userInputs.domain_size[0] / ((double) userInputs.subdivisions[0]) /
         //   std::pow(2.0, userInputs.refine_factor));
         // dealii::Utilities::fixed_power<2>()
-    scalar_IC = 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))) * 0.5 * (1.0+std::tanh((dealii::Utilities::fixed_power<2>(p[0] - userInputs.domain_size[0]/2.0)
-      + dealii::Utilities::fixed_power<2>(p[1] - userInputs.domain_size[1]/2.0) - dealii::Utilities::fixed_power<2>(userInputs.domain_size[0]/6.0))/(int_width/2.0)));
+    scalar_IC = 1 - 0.5*(1.0+std::tanh(-(userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))) * 0.5 * (1.0+std::tanh((dealii::Utilities::fixed_power<2>(p[0] - userInputs.domain_size[0]/2.0)
+      + dealii::Utilities::fixed_power<2>(p[1] - userInputs.domain_size[1]/2.0) - dealii::Utilities::fixed_power<2>(userInputs.domain_size[0]/6.0))/(30*int_width/2.0)));
+      // * 0.5 * (1.0+std::tanh((dealii::Utilities::fixed_power<2>(p[0] - 2*userInputs.domain_size[0]/3.0) + dealii::Utilities::fixed_power<2>(p[1] 
+      //   - userInputs.domain_size[1]/2.0) - dealii::Utilities::fixed_power<2>(userInputs.domain_size[0]/8.0))/(30*int_width/2.0)));
+      // * 0.5 * (1.0+std::tanh((dealii::Utilities::fixed_power<2>(p[0] - 3*userInputs.domain_size[0]/4.0) + dealii::Utilities::fixed_power<2>(p[1] 
+      //   - userInputs.domain_size[1]/2.0) - dealii::Utilities::fixed_power<2>(userInputs.domain_size[0]/10.0))/(10*int_width/2.0)));
     
     // double r = std::sqrt((p[0]-userInputs.domain_size[0]/2.0)*(p[0]-userInputs.domain_size[0]/2.0)+(p[1]-userInputs.domain_size[1]/2.0)*(p[1]-userInputs.domain_size[1]/2.0));
     // scalar_IC = 0.5*(1.0+std::tanh((r-std::sqrt(userInputs.domain_size[0]/4.0))/(0.5*int_width)));
@@ -38,7 +42,9 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
   }
 
   if (index == 2){
-    scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2))) + 1.0e-6;
+    // scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2))) + 1.0e-6;
+    scalar_IC = 1 - 0.5*(1.0+std::tanh(-(userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))) * 0.5 * (1.0+std::tanh((dealii::Utilities::fixed_power<2>(p[0] - userInputs.domain_size[0]/2.0)
+      + dealii::Utilities::fixed_power<2>(p[1] - userInputs.domain_size[1]/2.0) - dealii::Utilities::fixed_power<2>(userInputs.domain_size[0]/6.0))/(30*int_width/2.0)));
   }
 
   // ---------------------------------------------------------------------

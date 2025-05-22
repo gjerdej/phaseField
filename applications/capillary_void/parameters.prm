@@ -74,7 +74,7 @@ set Boundary condition for variable psi = NATURAL
 set Model constant McV = 1.0, DOUBLE
 
 # The gradient energy coefficient, KcV in equations.h
-set Model constant KcV = 1.0, DOUBLE
+set Model constant KcV = 30.0, DOUBLE
 
 # =================================================================================
 # Set the output parameters

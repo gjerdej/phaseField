@@ -122,7 +122,7 @@ customPDE<dim, degree>::nonExplicitEquationRHS(
   // --- Setting the expressions for the terms in the governing equations ---
 
   // The derivative of the local free energy
-  scalarvalueType fcV = 30.0 * constV(0.5) * (c * (1.0 - c) * (1.0 - c) - c * c * (1.0 - c));
+  scalarvalueType fcV = 90.0 * constV(0.5) * (c * (1.0 - c) * (1.0 - c) - c * c * (1.0 - c));
 
   // The terms for the governing equations
   for (int i = 0.0; i < dim; ++i) {
