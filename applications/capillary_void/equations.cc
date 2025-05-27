@@ -220,7 +220,7 @@ customPDE<dim, degree>::equationLHS(
     scalarvalueType j0 = 24.0;
     scalarvalueType RT = 2.48e3;
 
-    scalarvalueType eq_phie  = -std::sqrt(psix * psix) * j0 * F / RT * Dphie;
+    scalarvalueType eq_phie  = std::sqrt(psix * psix) * j0 * F / RT * Dphie;
     scalargradType eqx_phie = (1.0 - psi) * Dphiex * sigma;
   
     variable_list.set_scalar_gradient_term_LHS(3,eqx_phie); 

@@ -112,11 +112,11 @@ end
 # Set the nonlinear solver parameters
 # =================================================================================
 
-#set Maximum nonlinear solver iterations = 1000
+#set Maximum nonlinear solver iterations = 1
 
 subsection Nonlinear solver parameters: phie
     set Tolerance type = ABSOLUTE_SOLUTION_CHANGE
-    set Tolerance value = 1.0e-3
+    set Tolerance value = 1.0e3
     #set Use backtracking line search damping = false
     set Constant damping value = 0.3
     set Use Laplace's equation to determine the initial guess = true
