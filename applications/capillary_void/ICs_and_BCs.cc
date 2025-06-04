@@ -22,7 +22,7 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
   if (index == 0){
     // scalar_IC = 0.5*(1.0+std::tanh((userInputs.domain_size[1]/2.0 - p[1])/(int_width/2))) * 0.5 * (1.0+std::tanh((dealii::Utilities::fixed_power<2>(p[0] - userInputs.domain_size[0]/2.0)
       // + dealii::Utilities::fixed_power<2>(p[1] - userInputs.domain_size[1]/2.0) - dealii::Utilities::fixed_power<2>(userInputs.domain_size[0]/6.0))/(int_width/2.0)));
-    scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2)));
+    scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2.0)));
   }
 
   if (index == 1){
@@ -32,7 +32,8 @@ customPDE<dim, degree>::setInitialCondition([[maybe_unused]] const Point<dim>  &
   }
 
   if (index == 2){
-    scalar_IC = 0.5*(1.0+std::tanh(-(p[1]-userInputs.domain_size[1]/2.0)/(int_width/2))) + 1.0e-6;
+    scalar_IC = 0.5 * (1.0 + std::tanh(-(p[1] - userInputs.domain_size[1] / 2.0) / (int_width / 2.0))) + 1.0e-6;
+    // scalar_IC = 0.5 * (1.0 + std::tanh(-(p[1] - userInputs.domain_size[1] / 2.0) / (int_width / 2.0))) + 1.0e-6;
   }
 
   if (index == 3){
